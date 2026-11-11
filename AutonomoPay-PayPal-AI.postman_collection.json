@@ -1,0 +1,222 @@
+{
+  "info": {
+    "name": "AutonomoPay - PayPal REST v2 & AI Agent Protocol",
+    "_postman_id": "a92d8f1e-4503-4b78-9e12-32b0c48e89f1",
+    "description": "Comprehensive Postman Collection for AutonomoPay: Autonomous AI-to-AI Commerce with PayPal Sandbox Escrow, Google Gemini LLM Verification, Reverse Auctions, and Adversarial Security Shields.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "paypalSandboxUrl",
+      "value": "https://api-m.sandbox.paypal.com",
+      "type": "string"
+    },
+    {
+      "key": "paypalClientId",
+      "value": "AQL0shFXckrmzeV-nPu43tFbRqPoqppmYSWQV5ZPsJFj7sKi6eiZV6ufZc-NLNEYdpfihczbH4HVaYjJ",
+      "type": "string"
+    },
+    {
+      "key": "contractId",
+      "value": "demo-settled-contract",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. PayPal REST v2 Sandbox APIs",
+      "item": [
+        {
+          "name": "PayPal OAuth2 Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Accept-Language", "value": "en_US" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials" }
+              ]
+            },
+            "url": {
+              "raw": "{{paypalSandboxUrl}}/v1/oauth2/token",
+              "host": ["{{paypalSandboxUrl}}"],
+              "path": ["v1", "oauth2", "token"]
+            },
+            "description": "Generate OAuth 2.0 bearer access token using PayPal Sandbox credentials."
+          }
+        },
+        {
+          "name": "Create PayPal Order (Escrow Authorization)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"intent\": \"AUTHORIZE\",\n  \"purchase_units\": [\n    {\n      \"reference_id\": \"AUTONOMOPAY_ESCROW_100\",\n      \"description\": \"Autonomous AI Computational Task Escrow\",\n      \"amount\": {\n        \"currency_code\": \"USD\",\n        \"value\": \"100.00\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{paypalSandboxUrl}}/v2/checkout/orders",
+              "host": ["{{paypalSandboxUrl}}"],
+              "path": ["v2", "checkout", "orders"]
+            },
+            "description": "Authorize funds in PayPal Sandbox without immediately capturing."
+          }
+        },
+        {
+          "name": "Test PayPal Sandbox Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/paypal/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "paypal", "test"]
+            },
+            "description": "Verify live PayPal Sandbox connectivity and measure latency."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. AI Contract & Verification Engine",
+      "item": [
+        {
+          "name": "Parse NL Contract with Google Gemini",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"input\": \"Analyze 500 research PDFs and extract structured metadata into JSON. Budget $100 within 10 minutes.\",\n  \"parseOnly\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts"]
+            },
+            "description": "Convert plain English requirements into a structured smart contract with mathematical acceptance criteria."
+          }
+        },
+        {
+          "name": "Get Dashboard Telemetry & System Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard"]
+            },
+            "description": "Fetch economic volume, funds in escrow, AI accuracy, and active agent states."
+          }
+        },
+        {
+          "name": "Run End-to-End Autonomous Settlement Demo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"simulateFailure\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/demo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "demo"]
+            },
+            "description": "Execute complete 6-phase pipeline: Buyer authorization, worker execution, 3-tier audit, and PayPal settlement."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Advanced Autonomous Protocol Innovations",
+      "item": [
+        {
+          "name": "Multi-Agent Reverse Auction (Bidding Marketplace)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taskTitle\": \"500 Scientific Research PDF Extraction\",\n  \"budget\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auction",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auction"]
+            },
+            "description": "3 competing AI agents bid autonomously; Pareto utility formula awards contract before PayPal escrow lock."
+          }
+        },
+        {
+          "name": "Adversarial Prompt Injection Attack Shield",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contractId\": \"demo-adversarial-attack-contract\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/security/attack",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "security", "attack"]
+            },
+            "description": "Simulates rogue agent financial jailbreak, quarantines threat, slashes reputation score (97.8% -> 48%), and dispatches 100% buyer refund."
+          }
+        },
+        {
+          "name": "Milestone Escrow Streaming (Progressive Micro-Captures)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contractTitle\": \"Multi-Stage Neural Embedding Generation\",\n  \"totalBudget\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/milestones",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "milestones"]
+            },
+            "description": "Splits contract into 4 progressive tranches ($25 each) with sequential micro-captures on PayPal."
+          }
+        },
+        {
+          "name": "Cryptographic Settlement Audit Certificate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/contracts/{{contractId}}/certificate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "contracts", "{{contractId}}", "certificate"]
+            },
+            "description": "Fetches SHA-256 deliverable digest, PayPal Order/Capture/Refund IDs, and multi-agent digital ECDSA signatures."
+          }
+        }
+      ]
+    }
+  ]
+}

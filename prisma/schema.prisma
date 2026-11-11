@@ -1,0 +1,209 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agents    Agent[]
+  contracts Contract[]  @relation("ContractCreator")
+  payments  Payment[]
+}
+
+model Agent {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // BUYER, WORKER, VERIFIER, ARBITRATOR
+  description String?
+  avatar      String?
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, BUSY
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user                User       @relation(fields: [userId], references: [id])
+  buyerContracts      Contract[] @relation("BuyerAgent")
+  workerContracts     Contract[] @relation("WorkerAgent")
+  deliverables        Deliverable[]
+  verificationRuns    VerificationRun[]
+  disputes            Dispute[]
+  auditEvents         AuditEvent[]
+}
+
+model Contract {
+  id                String   @id @default(uuid())
+  title             String
+  description       String
+  task              String
+  deliverableType   String   @default("JSON")
+  deadline          DateTime?
+  budget            Float
+  currency          String   @default("USD")
+  status            String   @default("DRAFT")
+  // DRAFT, FUNDED, ACCEPTED, IN_PROGRESS, DELIVERABLE_SUBMITTED,
+  // VERIFICATION_PENDING, VERIFIED, SETTLED, PARTIALLY_SETTLED,
+  // REFUNDED, DISPUTED, HUMAN_REVIEW, COMPLETED, CANCELLED
+  rawInput          String?
+  parsedContract    String?  // JSON string of parsed contract
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  creatorId         String
+  buyerAgentId      String
+  workerAgentId     String?
+
+  creator           User     @relation("ContractCreator", fields: [creatorId], references: [id])
+  buyerAgent        Agent    @relation("BuyerAgent", fields: [buyerAgentId], references: [id])
+  workerAgent       Agent?   @relation("WorkerAgent", fields: [workerAgentId], references: [id])
+
+  milestones        Milestone[]
+  acceptanceCriteria AcceptanceCriterion[]
+  payment           Payment?
+  deliverables      Deliverable[]
+  verificationRuns  VerificationRun[]
+  disputes          Dispute[]
+  auditEvents       AuditEvent[]
+}
+
+model Milestone {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, FAILED
+  order       Int
+  contractId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  contract    Contract @relation(fields: [contractId], references: [id])
+}
+
+model AcceptanceCriterion {
+  id          String   @id @default(uuid())
+  criterion   String
+  type        String   @default("MANDATORY") // MANDATORY, OPTIONAL
+  weight      Float    @default(1.0)
+  contractId  String
+  createdAt   DateTime @default(now())
+
+  contract    Contract @relation(fields: [contractId], references: [id])
+  verificationResults VerificationResult[]
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  amount          Float
+  currency        String   @default("USD")
+  status          String   @default("CREATED")
+  // CREATED, AUTHORIZED, VERIFICATION_PENDING, APPROVED, CAPTURED,
+  // PARTIALLY_SETTLED, REFUNDED, DISPUTED, HUMAN_REVIEW
+  paypalOrderId      String?
+  paypalCaptureId    String?
+  paypalRefundId     String?
+  paypalPayoutId     String?
+  paypalDebugId      String?
+  paypalStatus       String?
+  settledAmount      Float?
+  refundedAmount     Float?
+  isSimulated        Boolean  @default(true)
+  rawPaypalResponse  String?
+  contractId      String   @unique
+  userId          String
+  idempotencyKey  String   @unique @default(uuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contract        Contract @relation(fields: [contractId], references: [id])
+  user            User     @relation(fields: [userId], references: [id])
+  auditEvents     AuditEvent[]
+}
+
+model Deliverable {
+  id          String   @id @default(uuid())
+  content     String   // JSON stringified deliverable
+  metadata    String?  // JSON metadata
+  status      String   @default("SUBMITTED") // SUBMITTED, ACCEPTED, REJECTED, PARTIAL
+  agentId     String
+  contractId  String
+  createdAt   DateTime @default(now())
+
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  contract    Contract @relation(fields: [contractId], references: [id])
+  verificationRuns VerificationRun[]
+}
+
+model VerificationRun {
+  id              String   @id @default(uuid())
+  type            String   // STRUCTURAL, QUALITY, DETERMINISTIC, ARBITRATION
+  status          String   @default("PENDING") // PENDING, RUNNING, COMPLETED, FAILED
+  score           Float?
+  recommendation  String?  // RELEASE, PARTIAL_SETTLEMENT, REFUND, HUMAN_REVIEW
+  reasoning       String?
+  rawResult       String?  // Full JSON result
+  agentId         String?
+  contractId      String
+  deliverableId   String?
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  agent           Agent?       @relation(fields: [agentId], references: [id])
+  contract        Contract     @relation(fields: [contractId], references: [id])
+  deliverable     Deliverable? @relation(fields: [deliverableId], references: [id])
+  results         VerificationResult[]
+}
+
+model VerificationResult {
+  id                    String   @id @default(uuid())
+  criterionId           String?
+  passed                Boolean
+  score                 Float?
+  evidence              String?
+  details               String?  // JSON details
+  verificationRunId     String
+  createdAt             DateTime @default(now())
+
+  criterion             AcceptanceCriterion? @relation(fields: [criterionId], references: [id])
+  verificationRun       VerificationRun      @relation(fields: [verificationRunId], references: [id])
+}
+
+model Dispute {
+  id          String   @id @default(uuid())
+  reason      String
+  evidence    String?
+  status      String   @default("OPEN") // OPEN, UNDER_REVIEW, RESOLVED, ESCALATED
+  resolution  String?
+  agentId     String
+  contractId  String
+  createdAt   DateTime @default(now())
+  resolvedAt  DateTime?
+
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  contract    Contract @relation(fields: [contractId], references: [id])
+}
+
+model AuditEvent {
+  id          String   @id @default(uuid())
+  event       String
+  actor       String
+  actorType   String   // USER, AGENT, SYSTEM, PAYPAL
+  result      String?
+  metadata    String?  // JSON metadata
+  contractId  String?
+  paymentId   String?
+  agentId     String?
+  timestamp   DateTime @default(now())
+
+  contract    Contract? @relation(fields: [contractId], references: [id])
+  payment     Payment?  @relation(fields: [paymentId], references: [id])
+  agent       Agent?    @relation(fields: [agentId], references: [id])
+}
